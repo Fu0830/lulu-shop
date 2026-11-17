@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-canvas-width="430" data-canvas-height="1000">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>噜噜的小商店 · LULU SHOP</title>
+<style>
+/* ===== 字体 ===== */
+@font-face{
+  font-family:"MengYa";
+  src:url("https://lf-flow-web-cdn.doubao.com/obj/flow-doubao/doubao/infinite-canvas/fonts/v1/zoomla-mengyas/zoomlamengyas-a080.ttf") format("truetype");
+  font-weight:400;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:"HanRounded";
+  src:url("https://lf-flow-web-cdn.doubao.com/obj/flow-doubao/doubao/infinite-canvas/fonts/v1/resource-han-rounded-cn/resource-han-rounded-cn-medium.ttf") format("truetype");
+  font-weight:500;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:"SourceHan";
+  src:url("https://lf-flow-web-cdn.doubao.com/obj/flow-doubao/doubao/infinite-canvas/fonts/v1/source-han-sans-sc-vf/source-han-sans-sc-vf.otf") format("opentype");
+  font-weight:250 900;font-style:normal;font-display:swap;
+}
+/* ===== 设计令牌 ===== */
+:root{
+  --cream:#FFF6E8;
+  --cream-2:#FFEDD3;
+  --paper:#FFFDF8;
+  --orange:#F59E2B;
+  --orange-deep:#E8831A;
+  --amber:#FFC24B;
+  --yolk:#FFD97A;
+  --brown:#7A4A1E;
+  --brown-soft:#A9743F;
+  --ink:#5B3A17;
+  --line:#F3D9AE;
+  --white:#FFFFFF;
+  --shadow:0 10px 30px rgba(180,110,30,.18);
+  --radius:26px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:"SourceHan","PingFang SC","Microsoft YaHei",sans-serif;
+  color:var(--ink);
+  background:#F7E3C2;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;}
+img{display:block;max-width:100%;}
+
+/* ===== 背景视频层 ===== */
+.bg-video{
+  position:fixed;inset:0;width:100%;height:100%;
+  object-fit:cover;z-index:0;
+}
+video{pointer-events:none;}
+video::-webkit-media-controls-start-playback-button{display:none!important;-webkit-appearance:none;}
+video::-webkit-media-controls{display:none!important;}
+/* ===== 开屏视频层 ===== */
+.splash{
+  position:fixed;inset:0;z-index:100;
+  background:var(--brown);
+  transition:opacity .5s ease,visibility .5s ease;
+}
+.splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
+.splash video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.splash-skip{
+  position:absolute;top:max(20px,env(safe-area-inset-top));right:18px;left:auto;
+  z-index:3;display:inline-flex;align-items:center;gap:6px;
+  min-width:104px;justify-content:center;padding:12px 20px;border-radius:999px;
+  background:rgba(122,74,30,.55);color:#FFF6E8;
+  font-size:15px;letter-spacing:1px;backdrop-filter:blur(6px);
+  border:1px solid rgba(255,246,232,.35);
+}
+.splash-skip:active{background:rgba(122,74,30,.75);}
+.splash-brand{
+  position:absolute;left:50%;bottom:max(34px,env(safe-area-inset-bottom));
+  transform:translateX(-50%);z-index:2;text-align:center;color:#FFF6E8;
+  text-shadow:0 2px 12px rgba(91,58,23,.6);
+}
+.splash-brand b{font-family:"MengYa";font-size:22px;letter-spacing:2px;display:block;}
+.splash-brand span{font-size:12px;letter-spacing:3px;opacity:.85;}
+.bg-mask{
+  position:fixed;inset:0;z-index:1;
+  background:linear-gradient(180deg,rgba(255,246,232,.72) 0%,rgba(255,237,211,.82) 55%,rgba(255,246,232,.9) 100%);
+}
+/* ===== 布局骨架 ===== */
+#app{position:relative;z-index:2;min-height:100%;}
+.wrap{max-width:430px;margin:0 auto;padding:0 18px;}
+
+/* ===== 顶部导航 ===== */
+.topbar{
+  position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;
+  background:rgba(255,246,232,.82);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:8px;}
+.brand img{width:34px;height:34px;object-fit:contain;}
+.brand-name{font-family:"MengYa";font-size:19px;color:var(--brown);letter-spacing:1px;}
+.brand-name small{display:block;font-family:"SourceHan";font-size:10px;color:var(--brown-soft);letter-spacing:2px;font-weight:500;}
+.nav{display:flex;gap:4px;}
+.nav button{
+  font-size:13px;color:var(--brown-soft);padding:7px 10px;border-radius:14px;
+  transition:.2s;
+}
+.nav button.on{background:var(--orange);color:var(--white);}
+.cart-btn{position:relative;}
+.cart-count{
+  position:absolute;top:-2px;right:-2px;background:var(--orange-deep);color:#fff;
+  font-size:10px;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  padding:0 4px;font-weight:700;
+}
+
+/* ===== 封面 HERO ===== */
+.hero{
+  min-height:calc(100vh - 62px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:40px 18px 60px;position:relative;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--white);border:1px solid var(--line);
+  border-radius:999px;padding:7px 16px;font-size:12px;color:var(--brown-soft);
+  letter-spacing:2px;box-shadow:var(--shadow);margin-bottom:22px;
+}
+.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:#5FC96B;}
+.hero-title{
+  font-family:"MengYa";font-size:44px;line-height:1.2;color:var(--brown);
+  letter-spacing:3px;margin-bottom:14px;
+}
+.hero-title em{font-style:normal;color:var(--orange-deep);}
+.hero-sub{font-size:15px;color:var(--brown-soft);line-height:1.9;max-width:300px;margin-bottom:26px;}
+.hero-lulu{width:200px;height:220px;object-fit:contain;margin-bottom:26px;filter:drop-shadow(0 16px 20px rgba(180,110,30,.25));animation:bounce 2.6s ease-in-out infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+.hero-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--orange);color:#fff;font-family:"MengYa";font-size:19px;letter-spacing:2px;
+  padding:17px 34px;border-radius:999px;box-shadow:0 14px 28px rgba(232,131,26,.38);
+  transition:.25s;
+}
+.hero-cta:active{transform:scale(.96);}
+.hero-cta .arrow{font-size:20px;}
+.hero-meta{margin-top:18px;font-size:12px;color:var(--brown-soft);letter-spacing:1px;}
+.hero-orange{position:absolute;opacity:.14;font-size:120px;}
+
+/* ===== 通用区块 ===== */
+section.block{padding:46px 0 10px;}
+.sec-head{margin-bottom:24px;}
+.sec-index{font-size:12px;letter-spacing:3px;color:var(--orange-deep);font-weight:600;margin-bottom:6px;}
+.sec-title{font-family:"MengYa";font-size:28px;color:var(--brown);letter-spacing:2px;}
+.sec-desc{font-size:13px;color:var(--brown-soft);line-height:1.8;margin-top:8px;}
+
+/* ===== 货架 ===== */
+.stat-row{display:flex;gap:10px;margin-bottom:22px;}
+.stat{
+  flex:1;background:var(--white);border:1px solid var(--line);border-radius:20px;
+  padding:14px 10px;text-align:center;box-shadow:var(--shadow);
+}
+.stat b{display:block;font-family:"MengYa";font-size:24px;color:var(--orange-deep);}
+.stat span{font-size:11px;color:var(--brown-soft);}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.filter-row button{
+  font-size:13px;padding:8px 15px;border-radius:999px;background:var(--white);
+  border:1px solid var(--line);color:var(--brown-soft);transition:.2s;
+}
+.filter-row button.on{background:var(--yolk);color:var(--brown);border-color:var(--amber);font-weight:600;}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.card{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 14px 14px;display:flex;flex-direction:column;align-items:center;text-align:center;
+  box-shadow:var(--shadow);transition:.25s;position:relative;
+}
+.card:hover{transform:translateY(-4px);}
+.card .thumb{width:130px;height:130px;object-fit:contain;margin-bottom:10px;}
+.card .tag{
+  position:absolute;top:12px;left:12px;font-size:10px;padding:3px 9px;border-radius:999px;
+  background:var(--cream-2);color:var(--orange-deep);letter-spacing:1px;
+}
+.card .tag.hot{background:var(--orange);color:#fff;}
+.card h3{font-size:15px;color:var(--brown);font-weight:600;margin-bottom:3px;}
+.card .en{font-size:10px;color:var(--brown-soft);letter-spacing:1.5px;margin-bottom:7px;}
+.card p{font-size:12px;color:var(--brown-soft);line-height:1.7;margin-bottom:12px;min-height:38px;}
+.card .foot{display:flex;align-items:center;gap:10px;width:100%;justify-content:center;}
+.card .price{font-family:"MengYa";font-size:19px;color:var(--orange-deep);}
+.card .price small{font-size:11px;}
+.add-btn{
+  background:var(--cream-2);color:var(--orange-deep);font-size:13px;font-weight:600;
+  padding:8px 16px;border-radius:999px;transition:.2s;
+}
+.add-btn.added{background:var(--orange);color:#fff;}
+
+/* ===== 须知 ===== */
+.notice-card{
+  background:var(--paper);border:1px solid var(--line);border-radius:30px;
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.owner-head{
+  display:flex;gap:16px;align-items:center;padding:24px 22px 18px;
+  background:linear-gradient(135deg,var(--yolk),var(--cream-2));
+}
+.owner-head img{width:110px;height:150px;object-fit:contain;}
+.owner-info h3{font-family:"MengYa";font-size:24px;color:var(--brown);letter-spacing:2px;}
+.owner-info .mbt{font-size:12px;color:var(--brown-soft);letter-spacing:2px;margin:5px 0 10px;}
+.owner-chips{display:flex;flex-wrap:wrap;gap:7px;}
+.owner-chips span{font-size:11px;background:var(--white);border:1px solid var(--line);border-radius:999px;padding:5px 11px;color:var(--brown-soft);}
+.notice-body{padding:22px;display:flex;flex-direction:column;gap:20px;}
+.nb-block h4{
+  display:flex;align-items:center;gap:8px;font-size:15px;color:var(--brown);margin-bottom:12px;
+}
+.nb-block h4 .ico{
+  width:24px;height:24px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:#fff;
+}
+.nb-block.rules h4 .ico{background:var(--amber);}
+.nb-block.likes h4 .ico{background:var(--orange);}
+.nb-block.nos h4 .ico{background:#D96A4A;}
+.nb-block ol{list-style:none;display:flex;flex-direction:column;gap:10px;}
+.nb-block li{
+  display:flex;gap:10px;font-size:13px;line-height:1.75;color:var(--ink);
+  background:var(--cream);border-radius:16px;padding:11px 13px;
+}
+.nb-block li .num{
+  flex:none;width:20px;height:20px;border-radius:50%;background:var(--cream-2);color:var(--orange-deep);
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px;
+}
+.nos li .num{background:#FBE3DA;color:#D96A4A;}
+.read-btn{
+  margin:0 22px 24px;width:calc(100% - 44px);
+  background:var(--orange);color:#fff;font-family:"MengYa";font-size:17px;letter-spacing:2px;
+  padding:15px;border-radius:999px;box-shadow:0 12px 24px rgba(232,131,26,.3);
+}
+.read-btn.read{background:#5FC96B;}
+
+/* ===== 陈列 ===== */
+.gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.g-item{
+  background:var(--paper);border:1px solid var(--line);border-radius:24px;overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.g-item .g-ph{width:100%;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,var(--yolk),var(--amber));color:var(--brown);}
+.g-item .g-ph .g-cam{font-size:30px;opacity:.85;}
+.g-item .g-ph .g-tip{font-size:11px;letter-spacing:1px;}
+.g-item .g-meta{padding:12px 14px;}
+.g-item .g-meta b{font-size:13px;color:var(--brown);display:block;}
+.g-item .g-meta span{font-size:11px;color:var(--brown-soft);}
+
+/* ===== 结账小票 ===== */
+.checkout{padding-bottom:80px;}
+.receipt{
+  background:var(--white);border-radius:24px;box-shadow:var(--shadow);overflow:hidden;
+  border:1px solid var(--line);
+}
+.receipt-top{padding:22px 24px 16px;text-align:center;border-bottom:2px dashed var(--line);}
+.receipt-top .r-brand{font-family:"MengYa";font-size:22px;color:var(--brown);letter-spacing:2px;}
+.receipt-top .r-sub{font-size:11px;color:var(--brown-soft);letter-spacing:2px;margin-top:5px;}
+.receipt-list{padding:18px 24px;display:flex;flex-direction:column;gap:12px;min-height:80px;}
+.r-empty{font-size:13px;color:var(--brown-soft);text-align:center;padding:20px 0;}
+.r-line{display:flex;justify-content:space-between;align-items:center;font-size:13px;}
+.r-line .r-name{color:var(--brown);}
+.r-line .r-price{color:var(--orange-deep);font-weight:600;}
+.r-line .r-remove{font-size:11px;color:#D96A4A;margin-left:8px;}
+.receipt-total{padding:16px 24px;border-top:2px dashed var(--line);display:flex;justify-content:space-between;align-items:center;}
+.receipt-total b{font-family:"MengYa";font-size:22px;color:var(--orange-deep);}
+.receipt-foot{padding:14px 24px 22px;text-align:center;font-size:11px;color:var(--brown-soft);letter-spacing:1px;}
+.pay-btn{
+  margin:0 24px 24px;width:calc(100% - 48px);
+  background:var(--brown);color:var(--yolk);font-family:"MengYa";font-size:17px;letter-spacing:3px;
+  padding:16px;border-radius:999px;
+}
+/* ===== 浮动购物袋 ===== */
+.fab{
+  position:fixed;right:18px;bottom:22px;z-index:40;
+  width:60px;height:60px;border-radius:50%;background:var(--orange);color:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 14px 30px rgba(180,110,30,.4);
+}
+.fab .cnt{font-size:15px;font-weight:700;}
+.fab small{font-size:9px;letter-spacing:1px;}
+/* ===== Toast ===== */
+.toast{
+  position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);
+  background:var(--brown);color:var(--yolk);font-size:13px;padding:11px 20px;border-radius:999px;
+  opacity:0;transition:.25s;z-index:60;pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ===== 抽屉小票（移动端结账浮层） ===== */
+.sheet-mask{
+  position:fixed;inset:0;background:rgba(91,58,23,.35);z-index:50;opacity:0;pointer-events:none;transition:.25s;
+}
+.sheet-mask.show{opacity:1;pointer-events:auto;}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:430px;margin:0 auto;
+  background:var(--cream);border-radius:28px 28px 0 0;transform:translateY(100%);transition:.3s;
+  padding-bottom:26px;
+}
+.sheet.show{transform:translateY(0);}
+.sheet-grip{width:44px;height:5px;border-radius:3px;background:var(--line);margin:12px auto 4px;}
+
+@media(min-width:768px){
+  .grid,.gallery{grid-template-columns:repeat(3,1fr);}
+  .hero-title{font-size:54px;}
+}
+</style>
+</head>
+<body>
+<!-- ===== 开屏视频 ===== -->
+<div class="splash" id="splash">
+  <video id="splashVideo" src="assets/bg-lulu.mp4" poster="assets/cutout_webp/lulu-01.webp" muted playsinline preload="auto" autoplay controlslist="nodownload noremoteplayback noplaybackrate" disablepictureinpicture></video>
+  <button class="splash-skip" id="skipBtn">跳过 <span>→</span></button>
+  <div class="splash-brand"><b>噜噜的小商店</b><span>LULU ORANGE SHOP</span></div>
+</div>
+
+<video class="bg-video" src="assets/bg-lulu.mp4" autoplay muted loop playsinline controlslist="nodownload noremoteplayback noplaybackrate" disablepictureinpicture></video>
+<div class="bg-mask"></div>
+
+<div id="app">
+  <!-- 顶部导航 -->
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/cutout_webp/lulu-01.webp" alt="噜噜">
+      <div class="brand-name">噜噜的小商店<small>LULU ORANGE SHOP</small></div>
+    </div>
+    <nav class="nav">
+      <button data-go="shop">选购</button>
+      <button data-go="notice">须知</button>
+      <button data-go="gallery">陈列</button>
+      <button data-go="checkout">结账</button>
+    </nav>
+  </header>
+
+  <!-- ===== 封面 ===== -->
+  <section class="hero" id="hero">
+    <div class="hero-badge"><span class="dot"></span>营业中 · 全天开着</div>
+    <img class="hero-lulu" src="assets/cutout_webp/lulu-01.webp" alt="欢呼的噜噜">
+    <h1 class="hero-title">帮噜噜走进<br><em>噜噜的小商店</em></h1>
+    <p class="hero-sub">货架上摆着噜噜攒下的小玩意儿，橙黄色的暖光一直亮着。跟在噜噜后面，轻轻推开门就好。</p>
+    <button class="hero-cta" id="enterBtn">帮助噜噜走进店里 <span class="arrow">→</span></button>
+    <div class="hero-meta">店主 · 栩栩 ｜ INFP · 双鱼座 ｜ 2.19 生日</div>
+  </section>
+
+  <!-- ===== 01 选购 ===== -->
+  <section class="block" id="shop">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-index">01 / SHOP</div>
+        <h2 class="sec-title">挑 东 西</h2>
+        <p class="sec-desc">挑中的先放进购物袋，最后一起到收银台算。点「加入」，右上角袋子会记着。</p>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><b id="statTotal">0</b><span>件在售</span></div>
+        <div class="stat"><b id="statCat">0</b><span>只噜噜周边</span></div>
+        <div class="stat"><b>0</b><span>元 · 起送</span></div>
+      </div>
+      <div class="filter-row" id="filterRow">
+        <button class="on" data-cat="all">全部</button>
+        <button data-cat="happy">情绪噜噜</button>
+        <button data-cat="food">吃喝噜噜</button>
+        <button data-cat="life">日常噜噜</button>
+        <button data-cat="play">装扮噜噜</button>
+      </div>
+      <div class="grid" id="productGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===== 02 须知 ===== -->
+  <section class="block" id="notice">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-index">02 / NOTICE</div>
+        <h2 class="sec-title">店 主 须 知</h2>
+        <p class="sec-desc">下面三段分别是规矩、喜点和雷点，看完再点单。店主是栩栩，一个软乎乎的 INFP。</p>
+      </div>
+      <div class="notice-card">
+        <div class="owner-head">
+          <img src="assets/cutout_webp/owner.webp" alt="店主栩栩">
+          <div class="owner-info">
+            <h3>栩栩</h3>
+            <div class="mbt">MBTI · INFP ｜ 双鱼座 ｜ 生日 2.19</div>
+            <div class="owner-chips">
+              <span>情绪价值优先</span><span>卡三无</span><span>话多不高冷</span>
+            </div>
+          </div>
+        </div>
+        <div class="notice-body">
+          <div class="nb-block rules">
+            <h4><span class="ico">规</span>须知 · RULES</h4>
+            <ol>
+              <li><span class="num">1</span><span>双鱼座，生日 2.19，记得是个需要被温柔对待的人。</span></li>
+              <li><span class="num">2</span><span>情绪价值优先，相处时先照顾彼此的心情，再谈输赢。</span></li>
+              <li><span class="num">3</span><span>卡三无：三无卡，不开不合规的单子。</span></li>
+            </ol>
+          </div>
+          <div class="nb-block likes">
+            <h4><span class="ico">喜</span>喜点 · LIKES</h4>
+            <ol>
+              <li><span class="num">1</span><span>话多不高冷，抽象一点也没关系，愿意热热闹闹地聊天。</span></li>
+              <li><span class="num">2</span><span>愿意带我刷牌子，给我让人头。</span></li>
+              <li><span class="num">3</span><span>被追着打的时候帮我报仇，被压着的时候替我回怼。</span></li>
+              <li><span class="num">4</span><span>小窝活跃，常回来坐坐、冒个泡。</span></li>
+              <li><span class="num">5</span><span>顺风让红蓝、接送我，惦记着我的那种体贴。</span></li>
+            </ol>
+          </div>
+          <div class="nb-block nos">
+            <h4><span class="ico">雷</span>雷点 · NO</h4>
+            <ol>
+              <li><span class="num">1</span><span>心态不好、爱压力人的，相处起来会很累。</span></li>
+              <li><span class="num">2</span><span>背刺我、背后蛐蛐我、阴阳怪气我、杀熟我，或是向我暗示要单、要礼物。</span></li>
+              <li><span class="num">3</span><span>吵架、混单、假分、开局送节奏。</span></li>
+              <li><span class="num">4</span><span>板类称呼不要用，美女、仙女这类称呼也不行。</span></li>
+              <li><span class="num">5</span><span>不接我的话、让我冷场，是最让人失落的。</span></li>
+            </ol>
+          </div>
+        </div>
+        <button class="read-btn" id="readBtn">我看完了，不踩雷 · 已阅</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 03 陈列 ===== -->
+  <section class="block" id="gallery">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-index">03 / MEMORIES</div>
+        <h2 class="sec-title">回 忆 陈 列</h2>
+        <p class="sec-desc">店里收着的日常照片，位置先留着，想放的图慢慢补进来。</p>
+      </div>
+      <div class="gallery" id="galleryGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===== 04 结账 ===== -->
+  <section class="block checkout" id="checkout">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-index">04 / CHECKOUT</div>
+        <h2 class="sec-title">结 账</h2>
+        <p class="sec-desc">打印出来是刚才挑的东西，可以撕下来收着。</p>
+      </div>
+      <div class="receipt">
+        <div class="receipt-top">
+          <div class="r-brand">噜噜的小商店</div>
+          <div class="r-sub">LULU ORANGE SHOP · 橙黄小屋</div>
+        </div>
+        <div class="receipt-list" id="receiptList"></div>
+        <div class="receipt-total">
+          <span style="font-size:13px;color:var(--brown-soft);">合计</span>
+          <b id="receiptTotal">¥ 0.00</b>
+        </div>
+        <div class="receipt-foot">收银 · 栩栩（本人） ｜ 日期 ________ ｜ 单号 LULU-0000-0000</div>
+        <button class="pay-btn" id="payBtn">付 款 结 账</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- 浮动购物袋 -->
+<button class="fab" id="fabBtn">
+  <span class="cnt" id="fabCount">0</span>
+  <small>购物袋</small>
+</button>
+
+<!-- 移动端小票抽屉 -->
+<div class="sheet-mask" id="sheetMask"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-grip"></div>
+  <div class="receipt-list" id="sheetList" style="padding:18px 24px;"></div>
+  <div class="receipt-total" style="padding:16px 24px;border-top:2px dashed var(--line);">
+    <span style="font-size:13px;color:var(--brown-soft);">合计</span>
+    <b id="sheetTotal">¥ 0.00</b>
+  </div>
+  <button class="pay-btn" id="sheetPayBtn" style="margin-top:14px;">付 款 结 账</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 商品数据 ===== */
+const IMG_URL = { "lulu-01": "assets/cutout_webp/lulu-01.webp", "lulu-02": "assets/cutout_webp/lulu-02.webp", "lulu-03": "assets/cutout_webp/lulu-03.webp", "lulu-04": "assets/cutout_webp/lulu-04.webp", "lulu-05": "assets/cutout_webp/lulu-05.webp", "lulu-06": "assets/cutout_webp/lulu-06.webp", "lulu-07": "assets/cutout_webp/lulu-07.webp", "lulu-08": "assets/cutout_webp/lulu-08.webp", "lulu-09": "assets/cutout_webp/lulu-09.webp", "lulu-10": "assets/cutout_webp/lulu-10.webp", "lulu-11": "assets/cutout_webp/lulu-11.webp", "lulu-12": "assets/cutout_webp/lulu-12.webp", "lulu-13": "assets/cutout_webp/lulu-13.webp", "lulu-14": "assets/cutout_webp/lulu-14.webp", "lulu-15": "assets/cutout_webp/lulu-15.webp", "lulu-15b": "assets/cutout_webp/lulu-15b.webp", "lulu-16": "assets/cutout_webp/lulu-16.webp", "lulu-17": "assets/cutout_webp/lulu-17.webp", "lulu-18": "assets/cutout_webp/lulu-18.webp", "lulu-19": "assets/cutout_webp/lulu-19.webp", "owner": "assets/cutout_webp/owner.webp" };
+const PRODUCTS = [
+  {id:1, cat:"happy", img:"lulu-01", name:"欢呼噜噜", en:"CHEER LULU", desc:"举着两只小拳头蹦跶，进店第一件事就是跟你打招呼。", price:6, tag:"最多人拿"},
+  {id:2, cat:"happy", img:"lulu-02", name:"捂住噜噜", en:"SHY LULU", desc:"两只小手捂住大嘴巴，收到惊喜时的害羞模样。", price:6},
+  {id:3, cat:"happy", img:"lulu-03", name:"敬礼噜噜", en:"SALUTE LULU", desc:"单眼眨眼抬手敬礼，靠谱又俏皮的一只。", price:6, tag:"新到"},
+  {id:4, cat:"play", img:"lulu-04", name:"掌机噜噜", en:"GAMER LULU", desc:"皱着眉握着掌机，打游戏超认真，别在关键时刻喊它。", price:9},
+  {id:5, cat:"life", img:"lulu-05", name:"抱抱膝噜噜", en:"SAD LULU", desc:"抱着膝盖蔫蔫坐着，需要被递一颗橘子安慰。", price:6},
+  {id:6, cat:"life", img:"lulu-06", name:"瘫睡噜噜", en:"NAP LULU", desc:"趴在地板上打哈欠，睡得圆滚滚一团。", price:6},
+  {id:7, cat:"food", img:"lulu-08", name:"汉堡噜噜", en:"BURGER LULU", desc:"夹在汉堡里的噜噜，生菜牛肉一层叠一层。", price:12, tag:"热卖"},
+  {id:8, cat:"food", img:"lulu-09", name:"可乐杯噜噜", en:"SODA CUP LULU", desc:"蹲进红色纸杯里，一脸不想被打扰的闷气。", price:10},
+  {id:9, cat:"food", img:"lulu-10", name:"薯条噜噜", en:"FRIES LULU", desc:"从薯条盒里探出脑袋，旁边还有小光芒。", price:10, tag:"热卖"},
+  {id:10, cat:"life", img:"lulu-11", name:"旅行噜噜", en:"TRAVEL LULU", desc:"背着青蛙小挎包、拖着行李箱，挥手出发去玩。", price:15},
+  {id:11, cat:"play", img:"lulu-12", name:"纸箱机器人", en:"ROBO LULU", desc:"套着画了机器人的纸箱，耳朵从洞里探出来。", price:11},
+  {id:12, cat:"happy", img:"lulu-13", name:"祈福噜噜", en:"LUCKY LULU", desc:"合掌坐着，头顶四叶草，身边绕着小星星。", price:12},
+  {id:13, cat:"play", img:"lulu-14", name:"超人噜噜", en:"HERO LULU", desc:"披着红披风叉腰站好，准备替你出头。", price:14, tag:"店长推荐"},
+  {id:14, cat:"life", img:"lulu-15b", name:"抱玩偶噜噜", en:"CUDDLE LULU", desc:"抱着粉色独角兽玩偶，闭眼贴贴，软乎乎。", price:12},
+  {id:20, cat:"life", img:"lulu-15", name:"做题噜噜", en:"STUDY LULU", desc:"戴圆眼镜托腮盯书本，旁边飘满问号。", price:11},
+  {id:15, cat:"food", img:"lulu-16", name:"嗦面噜噜", en:"NOODLE LULU", desc:"捧着大碗用筷子嗦面，眼睛弯成两条缝。", price:12},
+  {id:16, cat:"food", img:"lulu-17", name:"奶茶噜噜", en:"BOBA LULU", desc:"抱着珍珠奶茶用彩虹吸管吸，跟着音乐晃。", price:12},
+  {id:17, cat:"life", img:"lulu-18", name:"冥想噜噜", en:"MEDITATE LULU", desc:"盘腿打坐，橘子在头顶悬浮，身心放空。", price:11},
+  {id:18, cat:"play", img:"lulu-19", name:"拍照噜噜", en:"CAMERA LULU", desc:"举着相机单眼眨眼，咔嚓一声留住此刻。", price:11},
+  {id:19, cat:"play", img:"lulu-07", name:"勺子噜噜", en:"SPOON LULU", desc:"举着大勺子一脸不服，随时准备跟你理论两句。", price:9}
+];
+
+const GALLERY = [
+  {t:"旅行路上", s:"照片待补 · 出发去玩的片段"},
+  {t:"超人时刻", s:"照片待补 · 替你出头的样子"},
+  {t:"贴贴日常", s:"照片待补 · 软乎乎的陪伴"},
+  {t:"好运瞬间", s:"照片待补 · 许愿与小星星"},
+  {t:"一碗热面", s:"照片待补 · 嗦得很满足"},
+  {t:"珍珠奶茶", s:"照片待补 · 跟着音符晃动"},
+  {t:"静心时刻", s:"照片待补 · 放空与发呆"},
+  {t:"咔嚓留念", s:"照片待补 · 留住此刻"}
+];
+
+/* ===== 状态 ===== */
+let cart = {}; // id -> qty
+let currentCat = "all";
+
+/* ===== 渲染货架 ===== */
+const grid = document.getElementById("productGrid");
+function renderProducts(){
+  const list = PRODUCTS.filter(p=>currentCat==="all"||p.cat===currentCat);
+  grid.innerHTML = list.map(p=>`
+    <div class="card">
+      ${p.tag?`<span class="tag ${p.tag==="热卖"?"hot":""}">${p.tag}</span>`:""}
+      <img class="thumb" src="${IMG_URL[p.img]}" alt="${p.name}">
+      <h3>${p.name}</h3>
+      <div class="en">${p.en}</div>
+      <p>${p.desc}</p>
+      <div class="foot">
+        <span class="price"><small>¥</small>${p.price}</span>
+        <button class="add-btn ${cart[p.id]?"added":""}" data-add="${p.id}">${cart[p.id]?"已加入":"加入"}</button>
+      </div>
+    </div>`).join("");
+  document.getElementById("statTotal").textContent = list.length;
+  document.getElementById("statCat").textContent = PRODUCTS.length;
+}
+renderProducts();
+
+/* ===== 筛选 ===== */
+document.getElementById("filterRow").addEventListener("click",e=>{
+  const btn=e.target.closest("button"); if(!btn)return;
+  document.querySelectorAll("#filterRow button").forEach(b=>b.classList.remove("on"));
+  btn.classList.add("on"); currentCat=btn.dataset.cat; renderProducts();
+});
+
+/* ===== 加购 ===== */
+grid.addEventListener("click",e=>{
+  const btn=e.target.closest("[data-add]"); if(!btn)return;
+  const id=+btn.dataset.add;
+  cart[id]=(cart[id]||0)+1;
+  renderProducts(); updateCart();
+  const p=PRODUCTS.find(x=>x.id===id);
+  showToast(`已把「${p.name}」放进购物袋`);
+});
+
+/* ===== 购物袋统计 ===== */
+function cartEntries(){
+  return Object.entries(cart).map(([id,qty])=>({p:PRODUCTS.find(x=>x.id===+id),qty}));
+}
+function updateCart(){
+  const entries=cartEntries();
+  const count=entries.reduce((s,e)=>s+e.qty,0);
+  const total=entries.reduce((s,e)=>s+e.qty*e.p.price,0);
+  document.getElementById("fabCount").textContent=count;
+  document.getElementById("receiptTotal").textContent=`¥ ${total.toFixed(2)}`;
+  document.getElementById("sheetTotal").textContent=`¥ ${total.toFixed(2)}`;
+  renderReceipt(); renderSheet();
+}
+function renderReceipt(){
+  const box=document.getElementById("receiptList");
+  const entries=cartEntries();
+  if(!entries.length){box.innerHTML=`<div class="r-empty">袋子还空着，先去货架上挑点什么吧。</div>`;return;}
+  box.innerHTML=entries.map(({p,qty})=>`
+    <div class="r-line">
+      <span><span class="r-name">${p.name}</span> × ${qty}<button class="r-remove" data-remove="${p.id}">移除</button></span>
+      <span class="r-price">¥ ${(p.price*qty).toFixed(2)}</span>
+    </div>`).join("");
+}
+function renderSheet(){
+  const box=document.getElementById("sheetList");
+  const entries=cartEntries();
+  if(!entries.length){box.innerHTML=`<div class="r-empty">袋子还空着。</div>`;return;}
+  box.innerHTML=entries.map(({p,qty})=>`
+    <div class="r-line">
+      <span><span class="r-name">${p.name}</span> × ${qty}</span>
+      <span class="r-price">¥ ${(p.price*qty).toFixed(2)}</span>
+    </div>`).join("");
+}
+document.body.addEventListener("click",e=>{
+  const rm=e.target.closest("[data-remove]"); if(!rm)return;
+  const id=+rm.dataset.remove;
+  if(--cart[id]<=0) delete cart[id];
+  renderProducts(); updateCart();
+});
+
+/* ===== 陈列 ===== */
+document.getElementById("galleryGrid").innerHTML = GALLERY.map(g=>`
+  <div class="g-item">
+    <div class="g-ph"><span class="g-cam">📷</span><span class="g-tip">照片待补</span></div>
+    <div class="g-meta"><b>${g.t}</b><span>${g.s}</span></div>
+  </div>`).join("");
+
+/* ===== 导航滚动 ===== */
+function go(id){
+  document.getElementById(id).scrollIntoView({behavior:"smooth",block:"start"});
+}
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
+document.getElementById("enterBtn").addEventListener("click",()=>{showToast("噜噜蹦蹦跳跳地推门进店啦");go("shop");});
+
+/* ===== 已阅 ===== */
+document.getElementById("readBtn").addEventListener("click",function(){
+  this.classList.add("read"); this.textContent="已阅 · 不踩雷";
+  showToast("好啦，规矩都记下了");
+});
+
+/* ===== 抽屉 ===== */
+const sheet=document.getElementById("sheet"),mask=document.getElementById("sheetMask");
+function openSheet(){sheet.classList.add("show");mask.classList.add("show");}
+function closeSheet(){sheet.classList.remove("show");mask.classList.remove("show");}
+document.getElementById("fabBtn").addEventListener("click",openSheet);
+mask.addEventListener("click",closeSheet);
+
+/* ===== 结账 ===== */
+function pay(){
+  const entries=cartEntries();
+  if(!entries.length){showToast("购物袋还是空的，先挑一件吧");return;}
+  const total=entries.reduce((s,e)=>s+e.qty*e.p.price,0);
+  showToast(`结账成功 · 合计 ¥${total.toFixed(2)}，谢谢惠顾`);
+  cart={}; renderProducts(); updateCart(); closeSheet();
+}
+document.getElementById("payBtn").addEventListener("click",pay);
+document.getElementById("sheetPayBtn").addEventListener("click",pay);
+
+/* ===== Toast ===== */
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove("show"),2200);
+}
+updateCart();
+
+/* ===== 开屏视频：播完或跳过进入店内 ===== */
+const splash=document.getElementById("splash");
+const splashVideo=document.getElementById("splashVideo");
+let splashGone=false;
+function closeSplash(){
+  if(splashGone)return; splashGone=true;
+  splash.classList.add("hide");
+  setTimeout(()=>{splash.remove();},550);
+}
+document.getElementById("skipBtn").addEventListener("click",closeSplash);
+splashVideo.addEventListener("ended",closeSplash);
+// 兜底：视频无法自动播放/加载失败时，超时后自动进入，避免卡住
+splashVideo.addEventListener("error",closeSplash);
+setTimeout(closeSplash,10000);
+// 尝试播放；被浏览器拦截则等待用户交互后再尝试
+const sp=splashVideo.play();
+if(sp&&sp.catch){sp.catch(()=>{
+  const onFirst=()=>{splashVideo.play().catch(()=>{});document.removeEventListener("touchstart",onFirst);document.removeEventListener("click",onFirst);};
+  document.addEventListener("touchstart",onFirst);document.addEventListener("click",onFirst);
+});}
+</script>
+</body>
+</html>
